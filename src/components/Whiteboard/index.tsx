@@ -55,12 +55,20 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   }
 
   const getCursorURL = ({ item }: { item: Tool | Shapes }) => {
-    const size = item == 'pen' ? brushSize : item == 'eraser' ? eraserSize : item == 'text' ? fontSize*2 : 35;
+    const size = item === 'pen' ? brushSize
+                : item === 'eraser' ? eraserSize
+                : item === 'text' ? fontSize * 2
+                : 35;
+
     const cursorSVG = generateCursor(size, item, color);
     const blob = new Blob([cursorSVG], { type: 'image/svg+xml' });
-    const cursorUrl =  URL.createObjectURL(blob);
-    return `url(${cursorUrl}) 10 10, auto`;
-  }
+    const cursorUrl = URL.createObjectURL(blob);
+
+    const hotspot = `${size / 2} ${size / 2}`; // <-- center the hotspot
+
+    return `url(${cursorUrl}) ${hotspot}, auto`;
+  };
+
 
   const {
     undo,
@@ -565,7 +573,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
       />
       </div>
       <div className="min-h-screen flex items-center justify-center">
-        <div className="relative bg-[radial-gradient(circle,_#ccc_1px,_transparent_1px)] [background-size:20px_20px] border border-gray-300 rounded-3xl">
+        <div className={`relative dark:bg-[radial-gradient(circle,_#111_1px,_#040404_1px)] bg-[radial-gradient(circle,_#ccc_1px,_transparent_1px)] [background-size:20px_20px] border border-gray-300 rounded-3xl`}>
           <CanvasLayer
             ref={canvasRef}
             onMouseDown={startDrawing}

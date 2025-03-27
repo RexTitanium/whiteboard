@@ -13,6 +13,7 @@ import {
   Spline,
   Columns3,
   Type,
+  Moon,
 } from 'lucide-react';
 
 import { Tool, Shapes, ToolbarProps } from '../../types/types';
@@ -246,6 +247,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
     </div>
     <div className="mb-2 flex flex-wrap items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-gray-200">
       <ToolButton icon={<Save size={20} />} onClick={saveBoard} title="Save" />
+      <ToolButton icon={<Moon size={20} />} onClick={() => {document.documentElement.classList.toggle('dark');}} title="Load" />
     </div>
     </div>
   );
