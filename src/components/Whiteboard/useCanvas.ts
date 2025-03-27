@@ -32,10 +32,21 @@ export const useCanvas = (
     const img = new Image();
     img.src = prevState;
     img.onload = () => {
+      const dpr = window.devicePixelRatio || 1;
+
+      // ✅ Reset transform and clear
+      context.setTransform(1, 0, 0, 1, 0, 0);
       context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(img, 0, 0, canvas.width, canvas.height);
+      context.scale(dpr, dpr);
+
+      // ✅ Draw at display size (not raw pixel size)
+      const displayWidth = canvas.width / dpr;
+      const displayHeight = canvas.height / dpr;
+      context.drawImage(img, 0, 0, displayWidth, displayHeight);
     };
   };
+
+
 
   const redo = () => {
     const canvas = canvasRef.current;
@@ -51,11 +62,20 @@ export const useCanvas = (
     if (lastState) {
       img.src = lastState;
     }
+
     img.onload = () => {
+      const dpr = window.devicePixelRatio || 1;
+
+      context.setTransform(1, 0, 0, 1, 0, 0);
       context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(img, 0, 0, canvas.width, canvas.height);
+      context.scale(dpr, dpr);
+
+      const displayWidth = canvas.width / dpr;
+      const displayHeight = canvas.height / dpr;
+      context.drawImage(img, 0, 0, displayWidth, displayHeight);
     };
   };
+
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;

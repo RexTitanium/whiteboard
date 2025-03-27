@@ -1,28 +1,32 @@
 import React, { useState } from 'react';
-import logo from './logo.svg';
+import { v4 as uuidv4 } from 'uuid';
 import './App.css';
 import Whiteboard from './components/Whiteboard';
 import Home from './pages/Home';
 
 function App() {
-    const [activeBoard, setActiveBoard] = useState<string | null>(null);
-    const [boards, setBoards] = useState<Record<string, string>>({});
+    const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
+    const [boards, setBoards] = useState<Record<string, { name: string; data: string }>>({});
    
     const getUniqueBoardName = (base: string = 'Untitled') => {
       let name = base;
       let count = 1;
-      const keys = Object.keys(boards);
-      while (keys.includes(name)) {
+
+      const existingNames = Object.values(boards).map(b => b.name);
+      while (existingNames.includes(name)) {
         name = `${base} (${count++})`;
       }
+
       return name;
     };
+
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {activeBoard ? (
-        <Whiteboard boardName={activeBoard} onExit={() => setActiveBoard(null)} getUniqueBoardName={getUniqueBoardName}/>
+      {activeBoardId  ? (
+        <Whiteboard boardId={activeBoardId} board={boards[activeBoardId]} boards={boards} onExit={() => setActiveBoardId(null)} getUniqueBoardName={getUniqueBoardName} updateBoards={setBoards}/>
       ) : (
-        <Home onSelectBoard={(name) => setActiveBoard(name)} boards={boards} setBoards={setBoards} getUniqueBoardName={getUniqueBoardName}/>
+        <Home onSelectBoard={(id) => setActiveBoardId(id)} boards={boards} setBoards={setBoards} getUniqueBoardName={getUniqueBoardName}/>
       )}
     </div>
   );

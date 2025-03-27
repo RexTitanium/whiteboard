@@ -8,14 +8,20 @@ import Taskbar from '../Taskbar';
 import Toast from '../Toast';
 
 interface WhiteboardProps {
-  boardName: string;
+  boardId: string;
+  board: { name: string; data: string };
+  boards: Record<string, { name: string; data: string }>;
   onExit: () => void;
+  updateBoards: React.Dispatch<React.SetStateAction<Record<string, { name: string; data: string }>>>;
   getUniqueBoardName: (base?: string) => string;
 }
 
 
 const Whiteboard: React.FC<WhiteboardProps> = ({
-  boardName,
+  boardId,
+  board,
+  boards,
+  updateBoards,
   onExit,
   getUniqueBoardName,
 }) => {
@@ -34,7 +40,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   const [textPosition, setTextPosition] = useState<{ x: number; y: number } | null>(null);
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
-  const [fileName, setFileName] = useState(boardName || 'Unnamed');
+  const [fileName, setFileName] = useState(board.name || 'Unnamed');
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
 
@@ -95,7 +101,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     
     const saved = localStorage.getItem('savedBoards');
     const boards = saved ? JSON.parse(saved) : {};
-    if (boards[fileName]) {
+    if (boards[boardId]) {
       loadBoard();
     }
   }, [window.innerWidth, window.innerHeight]);
@@ -314,32 +320,43 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   };
 
 
-  const saveBoard = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const saveBoard = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    const dataUrl = canvas.toDataURL('image/png');
-    const saved = localStorage.getItem('savedBoards');
-    const boards = saved ? JSON.parse(saved) : {};
+      const dataUrl = canvas.toDataURL('image/png');
 
-    let nameToSave = fileName;
+      const saved = localStorage.getItem('savedBoards');
+      const boardsInStorage: Record<string, { name: string; data: string }> = saved ? JSON.parse(saved) : {};
 
-    // If this name already exists with different content, make a unique name
-    if (boards[nameToSave] && boards[nameToSave] !== dataUrl) {
-      nameToSave = getUniqueBoardName(fileName);
-      setFileName(nameToSave); // <-- update state!
-    }
+      // Find if another board has the same name (not including current board)
+      const nameExistsElsewhere = Object.entries(boardsInStorage).find(
+        ([id, { name }]) => name === fileName && id !== boardId
+      );
 
-    const updated = { ...boards, [nameToSave]: dataUrl };
+      let uniqueName = fileName;
 
-    // Clean up previous entry if name changed
-    if (nameToSave !== fileName && boards[fileName]) {
-      delete updated[fileName];
-    }
+      if (nameExistsElsewhere) {
+        // If a board with same name exists, generate a new unique name
+        uniqueName = getUniqueBoardName(fileName);
+        setFileName(uniqueName);
+      }
 
-    localStorage.setItem('savedBoards', JSON.stringify(updated));
-    triggerToast(`Board "${nameToSave}" saved`);
-  };
+      const updatedBoards = {
+        ...boardsInStorage,
+        [boardId]: {
+          name: uniqueName,
+          data: dataUrl,
+        },
+      };
+
+      localStorage.setItem('savedBoards', JSON.stringify(updatedBoards));
+      updateBoards(updatedBoards);
+
+      triggerToast(`Board "${uniqueName}" saved`);
+    };
+
+
 
 
   const loadBoard = () => {
@@ -347,23 +364,35 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const saved = localStorage.getItem('savedBoards');
-    const boards = saved ? JSON.parse(saved) : {};
-    const dataUrl = boards[boardName];
-    if (!dataUrl) {
-      triggerToast(`No saved data for "${boardName}"`);
+    const boardData = boards[boardId]?.data;
+    if (!boardData) {
+      triggerToast(`No saved data for "${fileName}"`);
       return;
     }
 
     const img = new Image();
-    img.src = dataUrl;
+    img.src = boardData;
+
     img.onload = () => {
+      const dpr = window.devicePixelRatio || 1;
+
+      // ✅ Clear canvas and reset transform
+      ctx.setTransform(1, 0, 0, 1, 0, 0); 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // ✅ Reapply scale for correct rendering (just once)
+      ctx.scale(dpr, dpr);
+
+      // ✅ Draw image at display size, not raw pixel size
+      const displayWidth = canvas.width / dpr;
+      const displayHeight = canvas.height / dpr;
+      ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
+
       saveSnapshot();
-      triggerToast(`Loaded "${boardName}"`);
+      triggerToast(`Loaded "${board.name}"`);
     };
   };
+
 
 
   
