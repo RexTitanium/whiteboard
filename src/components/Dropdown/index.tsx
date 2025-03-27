@@ -23,14 +23,14 @@ const Dropdown: React.FC<DropdownProps> = ({ children, onClose, label, showDoneB
   return (
     <div
       ref={ref}
-      className="absolute z-50 mt-2 p-4 bg-white border border-gray-300 rounded shadow w-64"
+      className="absolute z-50 mt-2 p-4 bg-white border border-gray-300 rounded shadow w-64 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md text-white"
     >
-      {label && <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>}
+      {label && <p className="text-sm font-medium text-gray-700 mb-2 dark:text-white">{label}</p>}
       <div>{children}</div>
       {showDoneButton &&
         <button
         onClick={onClose}
-        className="mt-3 px-3 py-1 text-sm rounded bg-stone-900 text-white hover:bg-stone-800 transition-all ease-in-out"
+        className="mt-3 px-3 py-1 text-sm rounded bg-stone-900 text-white hover:bg-stone-800 transition-all ease-in-out dark:bg-stone-800 dark:hover:bg-stone-700 dark:border-stone-800 dark:shadow-md"
       >
         Done
       </button>

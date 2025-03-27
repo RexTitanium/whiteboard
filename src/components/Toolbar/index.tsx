@@ -68,8 +68,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
   ];
 
   return (
-    <div className='flex flex-row gap-2'>
-    <div className="mb-2 flex flex-wrap items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className='flex flex-row gap-2 '>
+    <div className="mb-2 flex flex-wrap items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
       {/* Color Picker */}
       <input
         type="color"
@@ -98,9 +98,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
               step={0.5}
               value={brushSize}
               onChange={(e) => setBrushSize(Number(e.target.value))}
-              className="w-full accent-stone-900"
+              className="w-full accent-stone-900 dark:accent-[#606060]"
             />
-            <span className="text-sm text-gray-500 w-10 text-right">{brushSize}px</span>
           </div>
         </ToolDropdown>
       </div>
@@ -124,9 +123,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
               step={1}
               value={eraserSize}
               onChange={(e) => setEraserSize(Number(e.target.value))}
-              className="w-full accent-stone-900"
+              className="w-full accent-stone-900 dark:accent-[#606060]"
             />
-            <span className="text-sm text-gray-500 w-10 text-right">{eraserSize}px</span>
           </div>
         </ToolDropdown>
       </div>
@@ -149,15 +147,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
         >
           <div className="flex flex-row justify-between gap-3 text-sm">
             {/* Font Size */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-black dark:text-[#606060]">
               <label htmlFor="fontsize">Size:</label>
               <input
                 type="number"
-                min={10}
-                max={100}
                 value={fontSize}
                 onChange={(e) => setFontSize(Number(e.target.value))}
-                className="w-16 px-2 py-1 border rounded text-right"
+                onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+                className="w-16 px-2 py-1 focus:outline-none border rounded text-black text-right dark:bg-stone-900 dark:border-stone-800 dark:text-[#606060] dark:focus:text-white"
               />
             </div>
 
@@ -165,14 +162,14 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <div className="flex gap-2 items-center justify-start">
               <button
                 onClick={() => setIsBold(!isBold)}
-                className={`px-2 py-1 border rounded-md font-bold ${isBold ? 'bg-stone-800 text-white' : 'bg-white'}`}
+                className={`px-2 py-1 border rounded-md font-bold  ${isBold ? 'bg-stone-800 text-white' : 'bg-white text-black'} dark:border-[#606060] dark:bg-stone-800 dark:text-white dark:${isBold ? 'bg-stone-800 text-white' : 'bg-stone-900'}`}
                 title="Bold"
               >
                 B
               </button>
               <button
                 onClick={() => setIsItalic(!isItalic)}
-                className={`px-[9.5px] py-1 border rounded-md italic ${isItalic ? 'bg-stone-800 text-white' : 'bg-white'}`}
+                className={`px-[9.5px] py-1 border rounded-md italic ${isItalic ? 'bg-stone-800 text-white' : 'bg-white text-black'} dark:border-[#606060] dark:bg-stone-800 dark:text-white dark:${isItalic ? 'bg-stone-800 text-white' : 'bg-stone-900'}`}
                 title="Italic"
               >
                 I
@@ -186,7 +183,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
       {/* Shape Dropdown */}
        <div className="relative flex items-center gap-1">
-      <div className="w-7 h-7 relative border rounded-lg flex items-center justify-center">
+      <div className="w-7 h-7 relative rounded-lg flex items-center justify-center">
         <ToolButton
           icon={shapeOptions.find((s) => s.key === shape)?.icon || <Square size={20} />}
           onClick={() => {
@@ -205,9 +202,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
                 setShowShapeDropdown(false);
                 setTool('');
               }}
-              className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-gray-100 ${
+              className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-gray-100 rounded ${
                 shape === key ? 'bg-gray-100 font-medium' : ''
-              }`}
+              }
+              text-black
+              dark:hover:bg-stone-800 dark:bg-stone-900 dark:text-white dark:hover:text-[#b1b1b1] dark:font-medium
+              `}
             >
               {icon} {label}
             </button>
@@ -245,7 +245,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       <ToolButton icon={<RotateCw size={20} />} onClick={redo} title="Redo" />
       <ToolButton icon={<Trash size={20} />} onClick={clearCanvas} title="Clear" />
     </div>
-    <div className="mb-2 flex flex-wrap items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className="mb-2 flex flex-wrap items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
       <ToolButton icon={<Save size={20} />} onClick={saveBoard} title="Save" />
       <ToolButton icon={<Moon size={20} />} onClick={() => {document.documentElement.classList.toggle('dark');}} title="Load" />
     </div>

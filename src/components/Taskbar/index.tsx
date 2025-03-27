@@ -45,17 +45,17 @@ const Taskbar: React.FC<TaskbarProps> = ({
         {/* Left: File name input */}
 
         <div className="flex gap-2">
-            <div className="flex items-center gap-2 z-[999] p-2 bg-white rounded-xl shadow-sm border border-gray-200 h-10">
+            <div className="flex items-center gap-2 z-[999] p-2 bg-white rounded-xl shadow-sm border border-gray-200 h-10 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
                 <ToolButton icon={<MoveLeft size={20} strokeWidth={1.5}/>} title='Back' onClick={handleBackButton}/>
             </div>
-            <div className="flex items-center gap-2 z-[999] p-2 bg-white rounded-xl shadow-sm border border-gray-200 h-10">
+            <div className="flex items-center gap-2 z-[999] p-2 bg-white rounded-xl shadow-sm border border-gray-200 h-10 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
                 <input
                     type="text"
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                     placeholder="Unnamed"
-                    className="px-2 py-1 text-sm border-gray-800 focus:outline-none focus:border-b-2"
+                    className="px-2 py-1 text-sm border-gray-800 focus:outline-none focus:border-b-2 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md dark:text-[#606060] dark:focus:border-[#606060] dark:focus:text-white"
                     />
             </div>
         </div>
@@ -86,7 +86,7 @@ const Taskbar: React.FC<TaskbarProps> = ({
         />
 
         {/* Right: Download button */}
-        <div className="flex items-center gap-2 z-[999] h-10 w-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-100">
+        <div className="flex items-center gap-2 z-[999] h-10 w-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-100 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md dark:text-[#606060] dark:hover:bg-stone-800 dark:text-[#606060] dark:hover:text-[#b1b1b1]">
         <button
             onClick={downloadBoard}
         >

@@ -540,7 +540,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   }, [isTyping, textValue, textPosition, color, fontSize]);
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center dark:bg-[#000]">
       <div className="absolute z-[999] top-12 w-full">
         <Taskbar
         handleBackButton={onExit}
@@ -573,7 +573,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
       />
       </div>
       <div className="min-h-screen flex items-center justify-center">
-        <div className={`relative dark:bg-[radial-gradient(circle,_#111_1px,_#040404_1px)] bg-[radial-gradient(circle,_#ccc_1px,_transparent_1px)] [background-size:20px_20px] border border-gray-300 rounded-3xl`}>
+        <div className={`relative dark:bg-[radial-gradient(circle,_#111_1px,_#040404_1px)] bg-[radial-gradient(circle,_#ccc_1px,_transparent_1px)] [background-size:20px_20px] border border-gray-300 rounded-3xl transition-all duration-300 dark:border-gray-700`}>
           <CanvasLayer
             ref={canvasRef}
             onMouseDown={startDrawing}
