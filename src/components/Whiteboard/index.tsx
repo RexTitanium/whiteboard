@@ -6,6 +6,7 @@ import { Tool, Shapes } from '../../types/types';
 import { generateCursor } from './generateCursor';
 import Taskbar from '../Taskbar';
 import Toast from '../Toast';
+import { useRedrawThrottle } from './useRedrawThrottle';
 
 interface WhiteboardProps {
   boardId: string;
@@ -47,14 +48,28 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   const [offset, setOffset] = useState({ x: 0, y: 0 }); // Pan offset
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef<{ x: number; y: number } | null>(null);
-  const [baseImage, setBaseImage] = useState<HTMLImageElement | null>(null);
+  
+  const {
+    undo,
+    redo,
+    clearCanvas,
+    saveSnapshot,
+    redrawCanvas,
+    isDrawing,
+    setIsDrawing,
+    startPos,
+    setStartPos,
+  } = useCanvas(canvasRef, previewCanvasRef);
+  
 
+  const throttledRedraw = useRedrawThrottle(redrawCanvas);
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     const newScale = Math.min(Math.max(0.1, scale + delta), 5);
     setScale(newScale);
+    throttledRedraw(newScale, offset);
   };
 
   const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -77,7 +92,11 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     const dx = e.clientX - panStart.current.x;
     const dy = e.clientY - panStart.current.y;
 
-    setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+    setOffset((prev) => {
+      const newOffset = { x: prev.x + dx, y: prev.y + dy };
+      throttledRedraw(scale, newOffset); // <-- immediate redraw with the new offset
+      return newOffset;
+    });
     panStart.current = { x: e.clientX, y: e.clientY };
   };
 
@@ -110,18 +129,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     return `url(${cursorUrl}) ${hotspot}, auto`;
   };
 
-
-  const {
-    undo,
-    redo,
-    clearCanvas,
-    saveSnapshot,
-    redrawCanvas,
-    isDrawing,
-    setIsDrawing,
-    startPos,
-    setStartPos,
-  } = useCanvas(canvasRef, previewCanvasRef);
 
   // Canvas setup
   useEffect(() => {
@@ -157,10 +164,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   }, [window.innerWidth, window.innerHeight]);
 
 
-  useEffect(() => {
-    redrawCanvas(scale, offset);
-  }, [scale, offset]);
-
 
   const [fontSize, setFontSize] = useState(16); // optional UI later
 
@@ -169,7 +172,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
 
     if (e.button !== 0) return;
-    
+
     const { offsetX, offsetY } = getCanvasCoords(e);
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
@@ -458,8 +461,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
 
 
 
-  
-
   useEffect(() => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -649,7 +650,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
             onMouseLeave={endDrawing}
             onClick={handleCanvasClick}
             className=""
-            style={{ cursor: getCursorURL({ item: tool || shape }) }}
+            style={{ cursor: isPanning ? 'grab' : getCursorURL({ item: tool || shape }) }}
           />
 
           <CanvasLayer

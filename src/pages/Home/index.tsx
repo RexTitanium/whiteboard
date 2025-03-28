@@ -43,7 +43,7 @@ const Home: React.FC<HomeProps> = ({ onSelectBoard, boards, setBoards, getUnique
     <div className="p-6">
         <h2 className="text-2xl font-bold mb-4">My Boards</h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="flex gap-8 flex-rows">
             {Object.entries(boards).map(([id, { name, data }]) => (
                 <div key={id} className="w-72 bg-white border rounded-lg shadow hover:shadow-md transition">
                     <div
@@ -63,7 +63,7 @@ const Home: React.FC<HomeProps> = ({ onSelectBoard, boards, setBoards, getUnique
 
 
             {/* Add New Board Card — Always Visible */}
-            <div className="w-full flex justify-center">
+            <div className="flex justify-center">
                 <div
                     onClick={handleCreate}
                     className="w-72 aspect-square bg-gray-100 hover:bg-gray-200 border-dashed border-2 border-gray-400 rounded-lg flex items-center justify-center cursor-pointer transition"
