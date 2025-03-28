@@ -44,6 +44,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
   setIsBold,
   isItalic,
   setIsItalic,
+  scale,
+  offset,
 }) => {
   const [activeDropdown, setActiveDropdown] = useState<Tool | ''>('');
   const [showShapeDropdown, setShowShapeDropdown] = useState(false);
@@ -241,12 +243,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
         )}
       </div>
       {/* Canvas Actions */}
-      <ToolButton icon={<RotateCcw size={20} />} onClick={undo} title="Undo" />
-      <ToolButton icon={<RotateCw size={20} />} onClick={redo} title="Redo" />
+      <ToolButton icon={<RotateCcw size={20} />} onClick={() => undo(scale, offset)} title="Undo" />
+      <ToolButton icon={<RotateCw size={20} />} onClick={() => redo(scale, offset)} title="Redo" />
       <ToolButton icon={<Trash size={20} />} onClick={clearCanvas} title="Clear" />
     </div>
     <div className="mb-2 flex flex-wrap items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
-      <ToolButton icon={<Save size={20} />} onClick={saveBoard} title="Save" />
+      <ToolButton icon={<Save size={20} />} onClick={() => saveBoard(scale, offset)} title="Save" />
       <ToolButton icon={<Moon size={20} />} onClick={() => {document.documentElement.classList.toggle('dark');}} title="Load" />
     </div>
     </div>

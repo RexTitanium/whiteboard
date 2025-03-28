@@ -43,7 +43,48 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   const [fileName, setFileName] = useState(board.name || 'Unnamed');
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [scale, setScale] = useState(1); // Zoom level
+  const [offset, setOffset] = useState({ x: 0, y: 0 }); // Pan offset
+  const [isPanning, setIsPanning] = useState(false);
+  const panStart = useRef<{ x: number; y: number } | null>(null);
+  const [baseImage, setBaseImage] = useState<HTMLImageElement | null>(null);
 
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    const newScale = Math.min(Math.max(0.1, scale + delta), 5);
+    setScale(newScale);
+  };
+
+  const getCanvasCoords = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left - offset.x) / scale;
+    const y = (e.clientY - rect.top - offset.y) / scale;
+    return { offsetX: x, offsetY: y };
+  };
+
+  const handlePanStart = (e: React.MouseEvent) => {
+    if (e.button !== 1) return; // Middle mouse
+    e.preventDefault();
+    setIsPanning(true);
+    panStart.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePanMove = (e: React.MouseEvent) => {
+    if (!isPanning || !panStart.current) return;
+
+    const dx = e.clientX - panStart.current.x;
+    const dy = e.clientY - panStart.current.y;
+
+    setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+    panStart.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePanEnd = () => {
+    setIsPanning(false);
+    panStart.current = null;
+  };
 
   const downloadBoard = () => {
     const canvas = canvasRef.current;
@@ -75,6 +116,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     redo,
     clearCanvas,
     saveSnapshot,
+    redrawCanvas,
     isDrawing,
     setIsDrawing,
     startPos,
@@ -99,13 +141,13 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
 
       const ctx = c.getContext('2d');
       if (ctx) {
-        ctx.scale(dpr, dpr);
+        ctx.setTransform(scale * dpr, 0, 0, scale * dpr, offset.x * dpr, offset.y * dpr);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
       }
     });
 
-    saveSnapshot();
+    saveSnapshot(scale, offset);
     
     const saved = localStorage.getItem('savedBoards');
     const boards = saved ? JSON.parse(saved) : {};
@@ -114,11 +156,21 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     }
   }, [window.innerWidth, window.innerHeight]);
 
+
+  useEffect(() => {
+    redrawCanvas(scale, offset);
+  }, [scale, offset]);
+
+
   const [fontSize, setFontSize] = useState(16); // optional UI later
+
 
   // Drawing events
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const { offsetX, offsetY } = e.nativeEvent;
+
+    if (e.button !== 0) return;
+    
+    const { offsetX, offsetY } = getCanvasCoords(e);
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
 
@@ -149,7 +201,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
 
-    ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+    const { offsetX, offsetY } = getCanvasCoords(e);
+    ctx.lineTo(offsetX, offsetY);
     ctx.stroke();
   };
 
@@ -195,7 +248,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
       const ctx = preview?.getContext('2d');
       if (!preview || !ctx) return;
 
-      const { offsetX, offsetY, shiftKey } = e.nativeEvent;
+      const { offsetX, offsetY } = getCanvasCoords(e);
+      const shiftKey = e.nativeEvent;
       const { x, y } = startPos;
 
       let endX = offsetX;
@@ -324,7 +378,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
 
     setIsDrawing(false);
     setStartPos(null);
-    saveSnapshot();
+    saveSnapshot(scale, offset);
   };
 
 
@@ -389,14 +443,15 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // ✅ Reapply scale for correct rendering (just once)
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(scale * dpr, 0, 0, scale * dpr, offset.x * dpr, offset.y * dpr);
+
 
       // ✅ Draw image at display size, not raw pixel size
       const displayWidth = canvas.width / dpr;
       const displayHeight = canvas.height / dpr;
       ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
-      saveSnapshot();
+      saveSnapshot(scale, offset);
       triggerToast(`Loaded "${board.name}"`);
     };
   };
@@ -411,19 +466,23 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
       if (e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) {
-          redo(); // ✅ Ctrl + Shift + Z
+          redo(scale, offset); // ✅ Ctrl + Shift + Z
         } else {
-          undo(); // ✅ Ctrl + Z
+          undo(scale, offset); // ✅ Ctrl + Z
         }
       } else if (e.key.toLowerCase() === 'y') {
         e.preventDefault();
-        redo(); // ✅ Ctrl + Y
+        redo(scale, offset); // ✅ Ctrl + Y
       } else if (e.key.toLowerCase() === 's'){
         e.preventDefault();
         saveBoard();
       } else if (e.key.toLowerCase() === 'u'){
         e.preventDefault();
         saveBoard();
+      } else if (e.key.toLowerCase() === '0'){
+          setScale(1);
+          setOffset({ x: 0, y: 0 });
+
       }
       return;
     }
@@ -519,7 +578,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
         ctx.fillStyle = color;
         ctx.textBaseline = 'top';
         ctx.fillText(textValue, textPosition.x, textPosition.y);
-        saveSnapshot();
+        saveSnapshot(scale, offset);
 
         setIsTyping(false);
         setTextValue('');
@@ -570,9 +629,17 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
         setIsBold={setIsBold}
         isItalic={isItalic}
         setIsItalic={setIsItalic}
+        scale={scale}
+        offset={offset}
       />
       </div>
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" 
+        onWheel={handleWheel}
+        onMouseDown={handlePanStart}
+        onMouseMove={handlePanMove}
+        onMouseUp={handlePanEnd}
+        onMouseLeave={handlePanEnd}  
+      >
         <div className={`relative dark:bg-[radial-gradient(circle,_#111_1px,_#040404_1px)] bg-[radial-gradient(circle,_#ccc_1px,_transparent_1px)] [background-size:20px_20px] border border-gray-300 rounded-3xl transition-all duration-300 dark:border-gray-700`}>
           <CanvasLayer
             ref={canvasRef}

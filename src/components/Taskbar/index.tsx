@@ -38,7 +38,9 @@ const Taskbar: React.FC<TaskbarProps> = ({
     isBold,
     setIsBold,
     isItalic,
-    setIsItalic
+    setIsItalic,
+    scale,
+    offset,
 }) => {
   return (
     <div className='w-full px-10 flex justify-between'>
@@ -83,6 +85,8 @@ const Taskbar: React.FC<TaskbarProps> = ({
             setIsBold={setIsBold}
             isItalic={isItalic}
             setIsItalic={setIsItalic}
+            scale={scale}
+            offset={offset}
         />
 
         {/* Right: Download button */}

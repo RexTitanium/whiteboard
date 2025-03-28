@@ -15,9 +15,9 @@ export interface ToolbarProps {
     tool: string,
     setTool: Dispatch<SetStateAction<Tool>>,
     clearCanvas:()  => void,
-    undo: () => void,
-    redo: () => void,
-    saveBoard: () => void,
+    undo: (scale: number, offset: { x: number; y: number }) => void,
+    redo: (scale: number, offset: { x: number; y: number }) => void,
+    saveBoard: (scale: number, offset: { x: number; y: number }) => void,
     loadBoard: () => void,
     gridCols: number;
     setGridCols: (val: number) => void;
@@ -26,7 +26,9 @@ export interface ToolbarProps {
     isBold: boolean,
     setIsBold: Dispatch<SetStateAction<boolean>>,
     isItalic: boolean,
-    setIsItalic: Dispatch<SetStateAction<boolean>>
+    setIsItalic: Dispatch<SetStateAction<boolean>>,
+    scale: number,
+    offset: { x: number; y: number },
 }
 
 export type BoardRecord = {
