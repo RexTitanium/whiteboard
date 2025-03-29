@@ -39,7 +39,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, password: string) => {
       const res = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
+      const token = res?.data?.token;
+
+      console.log(token)
+      if (token) {
+        localStorage.setItem('token', token);
+        window.location.reload();
+      } else {
+        console.error('Login succeeded but token missing from response');
+      }
       await fetchUser();
       };
 
