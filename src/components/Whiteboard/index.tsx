@@ -7,6 +7,7 @@ import { generateCursor } from './generateCursor';
 import Taskbar from '../Taskbar';
 import Toast from '../Toast';
 import { useRedrawThrottle } from './useRedrawThrottle';
+import api from '../../api/api';
 
 interface WhiteboardProps {
   boardId: string;
@@ -15,6 +16,8 @@ interface WhiteboardProps {
   onExit: () => void;
   updateBoards: React.Dispatch<React.SetStateAction<Record<string, { name: string; data: string }>>>;
   getUniqueBoardName: (base?: string) => string;
+  permission?: 'view' | 'edit';
+  sharedWith: { userId: string; email: string; permission: 'view' | 'edit' }[];
 }
 
 
@@ -25,10 +28,12 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   updateBoards,
   onExit,
   getUniqueBoardName,
+  permission,
+  sharedWith,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
-
+  const isReadOnly = permission === 'view';
   const [color, setColor] = useState('#000000');
   const [brushSize, setBrushSize] = useState(5);
   const [eraserSize, setEraserSize] = useState(20);
@@ -42,13 +47,15 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [fileName, setFileName] = useState(board.name || 'Unnamed');
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
-  const [scale, setScale] = useState(1); // Zoom level
-  const [offset, setOffset] = useState({ x: 0, y: 0 }); // Pan offset
+  const [scale, setScale] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const panStart = useRef<{ x: number; y: number } | null>(null);
-  
+  const [sharedUsers, setSharedUsers] = useState<{ userId: string; email: string; permission: 'view' | 'edit' }[]>(sharedWith);
+
   const {
     undo,
     redo,
@@ -63,6 +70,22 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   
 
   const throttledRedraw = useRedrawThrottle(redrawCanvas);
+  const handlePermissionChange = async (email: string, newPermission: 'view' | 'edit') => {
+    try {
+        await api.post(`/boards/${boardId}/share`, { email, permission: newPermission });
+
+        setSharedUsers((prev) =>
+        prev.map((u) =>
+            u.email === email ? { ...u, permission: newPermission } : u
+        )
+        );
+        triggerToast(`Updated ${email} to ${newPermission}`);
+    } catch (err) {
+        console.error('Failed to update permission:', err);
+        triggerToast('Failed to update permission');
+    }
+    };
+
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -80,7 +103,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   };
 
   const handlePanStart = (e: React.MouseEvent) => {
-    if (e.button !== 1) return; // Middle mouse
+    if (e.button !== 1) return;
     e.preventDefault();
     setIsPanning(true);
     panStart.current = { x: e.clientX, y: e.clientY };
@@ -94,7 +117,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
 
     setOffset((prev) => {
       const newOffset = { x: prev.x + dx, y: prev.y + dy };
-      throttledRedraw(scale, newOffset); // <-- immediate redraw with the new offset
+      throttledRedraw(scale, newOffset); 
       return newOffset;
     });
     panStart.current = { x: e.clientX, y: e.clientY };
@@ -124,13 +147,12 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     const blob = new Blob([cursorSVG], { type: 'image/svg+xml' });
     const cursorUrl = URL.createObjectURL(blob);
 
-    const hotspot = `${size / 2} ${size / 2}`; // <-- center the hotspot
+    const hotspot = `${size / 2} ${size / 2}`;
 
     return `url(${cursorUrl}) ${hotspot}, auto`;
   };
 
 
-  // Canvas setup
   useEffect(() => {
     const canvas = canvasRef.current;
     const preview = previewCanvasRef.current;
@@ -154,28 +176,24 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
       }
     });
 
-    saveSnapshot(scale, offset);
-    
-    const saved = localStorage.getItem('savedBoards');
-    const boards = saved ? JSON.parse(saved) : {};
-    if (boards[boardId]) {
+    if (board?.data) {
       loadBoard();
     }
   }, [window.innerWidth, window.innerHeight]);
 
 
 
-  const [fontSize, setFontSize] = useState(16); // optional UI later
+  const [fontSize, setFontSize] = useState(16);
 
-
-  // Drawing events
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
 
     if (e.button !== 0) return;
 
-    const { offsetX, offsetY } = getCanvasCoords(e);
+    
     const context = canvasRef.current?.getContext('2d');
     if (!context) return;
+
+    const { offsetX, offsetY } = getCanvasCoords(e);
 
     if (tool === 'pen' || tool === 'eraser' || tool === 'text') {
       context.beginPath();
@@ -194,7 +212,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   const triggerToast = (message: string) => {
     setToastMessage(message);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000); // hide after 3s
+    setTimeout(() => setShowToast(false), 3000);
   };
 
 
@@ -249,12 +267,16 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     if (shape !== '' && startPos) {
       const preview = previewCanvasRef.current;
       const ctx = preview?.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      ctx && ctx.setTransform(scale * dpr, 0, 0, scale * dpr, offset.x * dpr, offset.y * dpr);
+
       if (!preview || !ctx) return;
 
-      const { offsetX, offsetY } = getCanvasCoords(e);
-      const shiftKey = e.nativeEvent;
+      const {shiftKey} = e.nativeEvent;
       const { x, y } = startPos;
 
+      const { offsetX, offsetY } = getCanvasCoords(e);
+      
       let endX = offsetX;
       let endY = offsetY;
 
@@ -275,7 +297,10 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
         [endX, endY] = getSnappedEndpoint(x, y, length, snapped);
       }
 
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, preview.width, preview.height);
+      ctx.setTransform(scale * dpr, 0, 0, scale * dpr, offset.x * dpr, offset.y * dpr);
+
       ctx.beginPath();
       ctx.strokeStyle = color;
       ctx.lineWidth = brushSize;
@@ -308,6 +333,33 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     }
   };
 
+  
+  const saveBoard = async ():Promise<number | undefined> => {
+    if (isReadOnly) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dataUrl = canvas.toDataURL('image/png');
+
+    try {
+      const response = await api.post(`/boards/${boardId}/upload`, { dataUrl });
+      return response.status
+    } catch (err) {
+      console.error('Failed to upload to S3', err);
+      return 404
+    }
+  };
+
+
+  const scheduleSave = (time: number) => {
+    if (!time) return
+    const timeout = setTimeout(() => {
+      saveBoard();
+    }, time);
+
+    return () => clearTimeout(timeout);
+  };
+
 
   const endDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
@@ -316,7 +368,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const { offsetX, offsetY, shiftKey } = e.nativeEvent;
+    const { offsetX, offsetY } = getCanvasCoords(e);
+    const {shiftKey } = e.nativeEvent;
 
     if (tool === 'pen' || tool === 'eraser') {
       ctx.closePath();
@@ -385,42 +438,6 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   };
 
 
-    const saveBoard = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const dataUrl = canvas.toDataURL('image/png');
-
-      const saved = localStorage.getItem('savedBoards');
-      const boardsInStorage: Record<string, { name: string; data: string }> = saved ? JSON.parse(saved) : {};
-
-      // Find if another board has the same name (not including current board)
-      const nameExistsElsewhere = Object.entries(boardsInStorage).find(
-        ([id, { name }]) => name === fileName && id !== boardId
-      );
-
-      let uniqueName = fileName;
-
-      if (nameExistsElsewhere) {
-        // If a board with same name exists, generate a new unique name
-        uniqueName = getUniqueBoardName(fileName);
-        setFileName(uniqueName);
-      }
-
-      const updatedBoards = {
-        ...boardsInStorage,
-        [boardId]: {
-          name: uniqueName,
-          data: dataUrl,
-        },
-      };
-
-      localStorage.setItem('savedBoards', JSON.stringify(updatedBoards));
-      updateBoards(updatedBoards);
-
-      triggerToast(`Board "${uniqueName}" saved`);
-    };
-
 
 
 
@@ -429,37 +446,43 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const boardData = boards[boardId]?.data;
+    const boardData = board.data;
     if (!boardData) {
-      triggerToast(`No saved data for "${fileName}"`);
+      triggerToast(`No saved data for "${board.name}"`);
       return;
     }
 
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.src = boardData;
 
     img.onload = () => {
       const dpr = window.devicePixelRatio || 1;
 
-      // ✅ Clear canvas and reset transform
-      ctx.setTransform(1, 0, 0, 1, 0, 0); 
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // ✅ Reapply scale for correct rendering (just once)
       ctx.setTransform(scale * dpr, 0, 0, scale * dpr, offset.x * dpr, offset.y * dpr);
-
-
-      // ✅ Draw image at display size, not raw pixel size
       const displayWidth = canvas.width / dpr;
       const displayHeight = canvas.height / dpr;
       ctx.drawImage(img, 0, 0, displayWidth, displayHeight);
 
-      saveSnapshot(scale, offset);
+      requestAnimationFrame(() => {
+        saveSnapshot(scale, offset);
+      });
+
       triggerToast(`Loaded "${board.name}"`);
     };
   };
 
 
+  useEffect(() => {
+    scheduleSave(5000)
+  }, []);
+
+   useEffect(() => {
+    scheduleSave(2000)
+  }, [fileName]);
 
   useEffect(() => {
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -467,13 +490,13 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
       if (e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) {
-          redo(scale, offset); // ✅ Ctrl + Shift + Z
+          redo(scale, offset); 
         } else {
-          undo(scale, offset); // ✅ Ctrl + Z
+          undo(scale, offset);
         }
       } else if (e.key.toLowerCase() === 'y') {
         e.preventDefault();
-        redo(scale, offset); // ✅ Ctrl + Y
+        redo(scale, offset); 
       } else if (e.key.toLowerCase() === 's'){
         e.preventDefault();
         saveBoard();
@@ -510,7 +533,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
         setTool('');
         break;
       case 'x':
-        clearCanvas();
+        clearCanvas(scale, offset);
         break;
     }
   };
@@ -546,13 +569,10 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
       ctx.fillStyle = color;
       ctx.textBaseline = 'top';
       
-
-      // Draw typed text
       if (textValue) {
         ctx.fillText(textValue, x, y);
       }
 
-      // Draw blinking cursor
       if (showCursor) {
         const textWidth = ctx.measureText(textValue).width;
         ctx.beginPath();
@@ -600,8 +620,8 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   }, [isTyping, textValue, textPosition, color, fontSize]);
 
   return (
-    <div className="flex flex-col items-center dark:bg-[#000]">
-      <div className="absolute z-[999] top-12 w-full">
+    <div className="flex flex-col items-center transition-[all 300ms ease] dark:bg-[#000] dark:transition-[all 300ms ease]">
+      <div className="absolute z-[100] top-12 w-full">
         <Taskbar
         handleBackButton={onExit}
         fileName={fileName}
@@ -632,6 +652,33 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
         setIsItalic={setIsItalic}
         scale={scale}
         offset={offset}
+        boardId={boardId}
+        sharedUsers={sharedUsers}
+        setSharedUsers={setSharedUsers}
+        onShare={async (email: string, permission: 'view' | 'edit') => {
+          try {
+            await api.post(`/boards/${boardId}/share`, { email, permission });
+
+            setSharedUsers((prev) => {
+              const existingIndex = prev.findIndex((u) => u.email === email);
+              if (existingIndex !== -1) {
+                const updated = [...prev];
+                updated[existingIndex] = { ...updated[existingIndex], permission };
+                return updated;
+              } else {
+                return [...prev, { email, permission, userId: '' }]; 
+              }
+            });
+
+            triggerToast(`Shared with ${email} (${permission})`);
+          } catch (err) {
+            console.error('Failed to share board', err);
+            triggerToast('Failed to share');
+          }
+        }}
+
+        handlePermissionChange={handlePermissionChange}
+        permission={permission}
       />
       </div>
       <div className="min-h-screen flex items-center justify-center" 
@@ -641,16 +688,16 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
         onMouseUp={handlePanEnd}
         onMouseLeave={handlePanEnd}  
       >
-        <div className={`relative dark:bg-[radial-gradient(circle,_#111_1px,_#040404_1px)] bg-[radial-gradient(circle,_#ccc_1px,_transparent_1px)] [background-size:20px_20px] border border-gray-300 rounded-3xl transition-all duration-300 dark:border-gray-700`}>
+        <div className={`relative transition-all duration-300ms ease dark: transition-all duration-300ms ease dark:bg-[radial-gradient(circle,_#111_1px,_#040404_1px)] bg-[radial-gradient(circle,_#ccc_1px,_transparent_1px)] [background-size:20px_20px] border border-gray-300 rounded-3xl transition-all duration-300 dark:border-gray-700`}>
           <CanvasLayer
             ref={canvasRef}
-            onMouseDown={startDrawing}
-            onMouseMove={handleMouseMove}
-            onMouseUp={endDrawing}
-            onMouseLeave={endDrawing}
-            onClick={handleCanvasClick}
+            onMouseDown={isReadOnly? undefined:startDrawing}
+            onMouseMove={isReadOnly? undefined:handleMouseMove}
+            onMouseUp={isReadOnly? undefined:endDrawing}
+            onMouseLeave={isReadOnly? undefined:endDrawing}
+            onClick={isReadOnly? undefined:handleCanvasClick}
             className=""
-            style={{ cursor: isPanning ? 'grab' : getCursorURL({ item: tool || shape }) }}
+            style={{ cursor: isPanning ? 'grab' : isReadOnly? 'not-allowed': getCursorURL({ item: tool || shape }) }}
           />
 
           <CanvasLayer

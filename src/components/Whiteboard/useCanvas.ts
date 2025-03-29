@@ -94,14 +94,17 @@ export const useCanvas = (
     };
   }, [canvasRef, redoStack]);
 
-  const clearCanvas = useCallback(() => {
+  const clearCanvas = useCallback((scale: number, offset: { x: number; y: number }) => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return;
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     setBaseImage(null);
-  }, [canvasRef]);
+
+    saveSnapshot(scale, offset);
+  }, [canvasRef, saveSnapshot]);
+
 
   return {
     undo,

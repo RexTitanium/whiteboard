@@ -3,6 +3,15 @@ import { Dispatch, SetStateAction } from "react";
 export type Tool = 'pen' | 'eraser' | 'text' | '' ;
 export type Shapes = 'rectangle' | 'circle' | 'line' | 'grid';
 
+export type Board = {
+    _id: string;
+    name: string;
+    data: string;
+    userId: string;
+    sharedWith?: string[];
+    shared?:boolean,
+};
+
 export interface ToolbarProps {
     color: string,
     setColor: Dispatch<SetStateAction<string>>, 
@@ -14,10 +23,10 @@ export interface ToolbarProps {
     setShape: Dispatch<SetStateAction<"" | Shapes>>,
     tool: string,
     setTool: Dispatch<SetStateAction<Tool>>,
-    clearCanvas:()  => void,
+    clearCanvas:(scale: number, offset: { x: number; y: number })  => void,
     undo: (scale: number, offset: { x: number; y: number }) => void,
     redo: (scale: number, offset: { x: number; y: number }) => void,
-    saveBoard: (scale: number, offset: { x: number; y: number }) => void,
+    saveBoard: () => Promise<number | undefined>,
     loadBoard: () => void,
     gridCols: number;
     setGridCols: (val: number) => void;
@@ -29,6 +38,20 @@ export interface ToolbarProps {
     setIsItalic: Dispatch<SetStateAction<boolean>>,
     scale: number,
     offset: { x: number; y: number },
+}
+
+export interface TaskbarProps extends ToolbarProps {
+    handleBackButton: () => void;
+    fileName: string;
+    setFileName: (name: string) => void;
+    downloadBoard: () => void;
+    boardId: string;
+    sharedWith?: string[];
+    onShare?: (email: string, permission: 'view' | 'edit') => void;
+    permission?: 'view' | 'edit';
+    sharedUsers: { userId: string; email: string; permission: 'view' | 'edit' }[],
+    setSharedUsers: Dispatch<SetStateAction<{ userId: string; email: string; permission: 'view' | 'edit' }[]>>,
+    handlePermissionChange: (email: string, newPermission: 'view' | 'edit') => void,
 }
 
 export type BoardRecord = {

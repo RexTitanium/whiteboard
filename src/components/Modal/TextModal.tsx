@@ -1,4 +1,3 @@
-// File: components/Modal/TextModal.tsx
 import React, { useEffect, useRef, useState } from 'react';
 
 interface TextModalProps {

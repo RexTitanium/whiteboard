@@ -14,11 +14,13 @@ import {
   Columns3,
   Type,
   Moon,
+  Sun,
 } from 'lucide-react';
 
 import { Tool, Shapes, ToolbarProps } from '../../types/types';
 import ToolButton from './ToolButton';
 import ToolDropdown from './ToolDropDown';
+import Toast from '../Toast';
 
 const Toolbar: React.FC<ToolbarProps> = ({
   color,
@@ -50,7 +52,15 @@ const Toolbar: React.FC<ToolbarProps> = ({
   const [activeDropdown, setActiveDropdown] = useState<Tool | ''>('');
   const [showShapeDropdown, setShowShapeDropdown] = useState(false);
   const [showGridDropdown, setShowGridDropdown] = useState(false);
-  
+  const [showToast, setShowToast] = useState<boolean>(false);
+  const [toastMessage, setToastMessage] = useState<string>('');
+  const [isDark, setIsDark] = useState<boolean>(document.documentElement.classList.contains('dark'));
+
+
+  const toggleTheme = () => {
+    document.documentElement.classList.toggle('dark');
+    setIsDark((prev) => !prev)
+  }
   const handleToolChange = (newTool: Tool) => {
     setTool(newTool);
     setShape('');
@@ -61,17 +71,33 @@ const Toolbar: React.FC<ToolbarProps> = ({
     setActiveDropdown(activeDropdown === toolName ? '' : toolName);
   };
 
+  const triggerToast = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const handleSave = async () => {
+    const status = await saveBoard();
+    if (status === 200) {
+      triggerToast('Board Saved');
+    } else {
+      triggerToast('Save failed');
+    }
+  };
+
+
   const shapeOptions: { key: Shapes; label: string; icon: any }[] = [
     { key: 'rectangle', label: 'Rectangle', icon: <Square size={20} strokeWidth={1.5} /> },
     { key: 'circle', label: 'Circle', icon: <Circle size={20} strokeWidth={1.5} /> },
     { key: 'line', label: 'Line', icon: <Spline size={20} strokeWidth={1.5} /> },
-    { key: 'grid', label: 'Grid', icon: <Columns3 size={20} strokeWidth={1.5} /> // or a custom grid icon
+    { key: 'grid', label: 'Grid', icon: <Columns3 size={20} strokeWidth={1.5} />
 }
   ];
 
   return (
     <div className='flex flex-row gap-2 '>
-    <div className="mb-2 flex flex-wrap items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
+    <div className="flex flex-wrap px-2 transition-all duration-300ms ease items-center gap-3 bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
       {/* Color Picker */}
       <input
         type="color"
@@ -134,7 +160,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
       {/* Text Tool */}
       <div className="relative flex items-center gap-1">
         <ToolButton
-          icon={<Type size={20} />} // from lucide-react
+          icon={<Type size={20} />} 
           onClick={() => handleToolChange('text')}
           active={tool === 'text'}
           title="Text Tool"
@@ -243,14 +269,21 @@ const Toolbar: React.FC<ToolbarProps> = ({
         )}
       </div>
       {/* Canvas Actions */}
+       <div className="relative flex items-center gap-1">
       <ToolButton icon={<RotateCcw size={20} />} onClick={() => undo(scale, offset)} title="Undo" />
       <ToolButton icon={<RotateCw size={20} />} onClick={() => redo(scale, offset)} title="Redo" />
-      <ToolButton icon={<Trash size={20} />} onClick={clearCanvas} title="Clear" />
+      <ToolButton icon={<Trash size={20} />} onClick={() => clearCanvas(scale, offset)} title="Clear" />
+      </div>
     </div>
-    <div className="mb-2 flex flex-wrap items-center gap-3 p-2 bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
-      <ToolButton icon={<Save size={20} />} onClick={() => saveBoard(scale, offset)} title="Save" />
-      <ToolButton icon={<Moon size={20} />} onClick={() => {document.documentElement.classList.toggle('dark');}} title="Load" />
+    <div className="relative px-2  transition-all duration-300ms ease flex items-center gap-3 bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
+      <div className="relative flex items-center gap-1">
+        <ToolButton icon={<Save size={20} />} onClick={() => handleSave()} title="Save" />
+      </div>
+      <div className="relative flex items-center gap-1">
+        <ToolButton icon={isDark ? <Sun size={20}/> : <Moon size={20} />} onClick={toggleTheme} title="Load" />
+      </div>
     </div>
+    <Toast message={toastMessage} show={showToast} />
     </div>
   );
 };

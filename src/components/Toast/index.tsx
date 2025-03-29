@@ -1,4 +1,3 @@
-// components/Toast.tsx
 import React from 'react';
 
 interface ToastProps {
