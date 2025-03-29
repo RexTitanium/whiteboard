@@ -166,7 +166,7 @@ const Home: React.FC = () => {
   return (
     <div className="p-6 dark:bg-[#0f0f0f] min-h-screen transition-colors duration-300">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-black dark:text-white">My Boards</h2>
+        <img src={'/images/logo.png'} className='h-[6.5vh] ml-4'/>
         <div className='flex flex-row gap-2'>
           {user ? (
             <div className="flex items-center gap-3">
@@ -189,7 +189,6 @@ const Home: React.FC = () => {
         </div>
         
       </div>
-
       <BoardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
       {activeTab !== 'recent' && <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
 
