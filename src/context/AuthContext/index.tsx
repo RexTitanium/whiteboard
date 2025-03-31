@@ -13,6 +13,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: (onLoggedOut?: () => void) => void;
   register: (name: string, email: string, password: string) => Promise<void>;
+  googleLogin: (credentials: string) => void,
 }
 
 
@@ -43,7 +44,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await api.post('/auth/login', { email, password });
       const token = res?.data?.token;
 
-      console.log(token)
       if (token) {
         localStorage.setItem('token', token);
         window.location.reload();
@@ -53,6 +53,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false)
       await fetchUser();
       };
+
+    const googleLogin = async (credential: string) => {
+      console.log("Google login response:", credential);
+      try {
+        const res = await api.post('/auth/google-login', {credential: credential});
+        const token = res?.data?.token
+        
+        if (token) {
+          localStorage.setItem('token', token);
+          window.location.reload();
+        } else {
+          console.error('Login succeeded but token missing from response');
+        }
+        setLoading(false)
+        await fetchUser();
+
+      } catch (err) {
+        console.error('Google login error:', err);
+        alert('Google login failed');
+      }
+    };
 
     const register = async (name: string, email: string, password: string) => {
       await api.post('/auth/register', { name, email, password });
@@ -74,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, googleLogin }}>
       {children}
     </AuthContext.Provider>
   );

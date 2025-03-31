@@ -52,12 +52,8 @@ const Home: React.FC = () => {
     return name;
   };
 
-  const handleLogout = () => {
-    logout(() => {
-      setBoards({});
-      localStorage.removeItem('savedBoards');
-      localStorage.removeItem('recentBoards');
-    });
+  const handleLogout = async () => {
+    await logout();
   };
 
   const handleCreate = async () => {
@@ -227,7 +223,6 @@ const Home: React.FC = () => {
                     changePage = {() => setSignInView((prev) => (prev === 'login' ? 'register':'login'))}
                     onSuccess={() => {
                       setShowSignInModal(false);
-                      window.location.reload();
                     }}
                   />
                 }
@@ -239,7 +234,6 @@ const Home: React.FC = () => {
                   onSuccess={() => {
                     fetchBoardsAndRecents();
                     setShowSignInModal(false);
-                    window.location.reload();
                   }}
               />}
             </div>
