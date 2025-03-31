@@ -20,10 +20,11 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(false); 
 
   const fetchUser = async () => {
     try {
+      setLoading(true)
       const res = await api.get('/auth/me');
       setUser(res.data);
     } catch {
@@ -38,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const login = async (email: string, password: string) => {
+      setLoading(true)
       const res = await api.post('/auth/login', { email, password });
       const token = res?.data?.token;
 
@@ -48,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         console.error('Login succeeded but token missing from response');
       }
+      setLoading(false)
       await fetchUser();
       };
 
@@ -59,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = async (callback?: () => void) => {
       try {
         await api.post('/auth/logout');
+        localStorage.removeItem('token')
         setUser(null);
         if (callback) callback();
       } catch (err) {

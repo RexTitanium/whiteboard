@@ -12,7 +12,9 @@ const PrivateRoute = ({ children }: PrivateRouteProps): ReactElement | null => {
 
   if (loading) {
     return (
-      <Loader />
+      <div className='min-h-screen'>
+        <Loader />
+      </div>
     );
   }
 

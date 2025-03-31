@@ -5,12 +5,13 @@ import BoardTabs from '../../components/Board/BoardTabs';
 import BoardCard from '../../components/Board/BoardCard';
 import NewBoardCard from '../../components/Board/NewBoardCard';
 import SearchBar from '../../components/SearchBar';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, XIcon } from 'lucide-react';
 import api from '../../api/api';
 import { useAuth } from '../../context/AuthContext';
 import Login from '../Login';
 import Register from '../Register';
 import { Board } from '../../types/types';
+import ToolButton from '../../components/Toolbar/ToolButton';
 
 const Home: React.FC = () => {
   const [boards, setBoards] = useState<Record<string, { name: string; data: string; shared?: boolean }>>({});
@@ -21,10 +22,8 @@ const Home: React.FC = () => {
   const [isDark, setIsDark] = useState<boolean>(document.documentElement.classList.contains('dark'));
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
-  const [shareBoardId, setShareBoardId] = useState<string | null>(null);
-  const [shareEmail, setShareEmail] = useState('');
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [signInView, setSignInView] = useState<'login' | 'register'>('login')
 
   useEffect(() => {
     if (!user) {
@@ -175,8 +174,7 @@ const Home: React.FC = () => {
             </div>
           ) : (
             <div className="flex gap-3">
-              <button onClick={() => setShowLogin(true)} className="text-blue-600 text-sm hover:underline">Login</button>
-              <button onClick={() => setShowRegister(true)} className="text-green-600 text-sm hover:underline">Register</button>
+              <button onClick={() => setShowSignInModal(true)} className="bg-[#ddd] text-[#555] hover:bg-[#bbb] hover:text-[#222] dark:bg-[#222] transition-all duration-300 ease rounded-xl text-white px-5 dark:hover:bg-[#000] hover:transition-[all 300ms ease]">Create Account/Sign In</button>
             </div>
           )}
 
@@ -207,30 +205,45 @@ const Home: React.FC = () => {
       </div>
       
       {/* Login Modal */}
-      {showLogin && (
+      {showSignInModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <Login
-              onClose={() => setShowLogin(false)}
-              onSuccess={() => {
-                fetchBoardsAndRecents();
-                setShowLogin(false);
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Register Modal */}
-      {showRegister && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <Register
-              onClose={() => setShowRegister(false)}
-              onSuccess={() => {
-                setShowRegister(false);
-              }}
-            />
+          <div className="flex flex-row gap-10 h-[50vh] w-[50vw] justify-center items-center bg-white rounded-2xl shadow-lg dark:bg-black">
+            <div className='relative w-full h-full flex justify-center items-center'>
+              <ToolButton icon={<XIcon size={16} strokeWidth={1.5} />} onClick={() => setShowSignInModal(false)} title={'Close'} 
+                        style='text-red-600 hover:bg-red-600 font-bold text-lg z-[999] transition-all duration-300ms ease hover:transition-[all 300ms ease] hover:text-white hover:rounded-full p-[1px] absolute top-2 right-2'
+              />
+              <div
+                className={`absolute top-[5%] h-[90%] w-[50%] rounded-3xl overflow-hidden z-[100] transition-transform duration-500 ease-in-out ${
+                  signInView === 'register' ? 'translate-x-[45%]' : '-translate-x-[45%]'
+                }`}
+              >
+                <img src="/images/holder_login.jpg" className="object-cover w-full h-full" />
+              </div>
+              <div className='grid grid-cols-2 gap-10 w-full p-4 justify-center'>
+                {signInView === 'login' ?
+                <div></div>
+                :
+                  <Register
+                    changePage = {() => setSignInView((prev) => (prev === 'login' ? 'register':'login'))}
+                    onSuccess={() => {
+                      setShowSignInModal(false);
+                      window.location.reload();
+                    }}
+                  />
+                }
+                {signInView === 'register' ?
+                <div></div>
+                :
+                <Login
+                  changePage = {() => setSignInView((prev) => (prev === 'login' ? 'register':'login'))}
+                  onSuccess={() => {
+                    fetchBoardsAndRecents();
+                    setShowSignInModal(false);
+                    window.location.reload();
+                  }}
+              />}
+            </div>
+            </div>
           </div>
         </div>
       )}

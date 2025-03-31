@@ -1,46 +1,127 @@
-# Getting Started with Create React App
+# 🖊️ Whiteboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> A collaborative canvas app built with React where users can draw, type, and annotate on a whiteboard in real time. Supports zooming, panning, undo/redo, grid snapping, text formatting, and board sharing with role-based permissions.
 
-## Available Scripts
+[![Deploy Status](https://img.shields.io/badge/deployed-render-green)](https://whiteboard-frontend.onrender.com)  
+[![Tech Stack](https://img.shields.io/badge/built%20with-React%2C%20TypeScript%2C%20Canvas-blue)](#technologies)
 
-In the project directory, you can run:
+<img src="./public/images/Website_SS.png" alt="Whiteboard Screenshot" style="border-radius: 10px"/>
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## 🚩 Table of Contents
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- [✨ Features](#-features)
+- [📦 Technologies](#-technologies)
+- [🚀 Getting Started](#-getting-started)
+- [🔐 Test Login](#-test-login)
+- [🛠 Deployment](#-deployment)
+- [🎯 Roadmap](#-roadmap)
+- [📄 License](#-license)
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## ✨ Features
 
-### `npm run build`
+- ✏️ Drawing tools: Pen, Eraser, Line, Rectangle, Circle, Grid
+- 🔤 Text with formatting: font size, bold, italic
+- 🧠 Smart canvas: Zoom, Pan, Snap angles
+- ♻️ Undo / Redo with Ctrl+Z / Ctrl+Y
+- 💾 Auto-save (throttled) to AWS S3
+- 🔒 Role-based access: View or Edit
+- 📤 Share boards via email with permissions
+- 🌙 Dark mode + responsive layout
+- 🧭 Keyboard shortcuts for tools & actions
+- 📂 Named multi-board management
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 📦 Technologies
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+| Layer       | Stack                                           |
+|-------------|--------------------------------------------------|
+| Frontend    | React, TypeScript, TailwindCSS                   |
+| Canvas      | HTML5 Canvas API (with preview layer)            |
+| State       | React Context API, Hooks                         |
+| API         | Axios with token-based auth                     |
+| Storage     | AWS S3 (via backend endpoint)                    |
+| Deployment  | Render (static site)                             |
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## 🚀 Getting Started
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+# Clone the repo
+git clone https://github.com/RexTitanium/whiteboard-frontend.git
+cd whiteboard
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+# Install dependencies
+npm install
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+# Set backend base URL
+echo "REACT_APP_BASE_URL=https://whiteboard-backend-67cb.onrender.com" > .env
 
-## Learn More
+# Start the dev server
+npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🔐 Test Login
+
+```
+Email: johndoe@example.com
+Password: johndoe
+```
+
+---
+
+## 🛠 Deployment
+Frontend is hosted on **Render** as a static site.
+
+- ✅ GitHub connected
+
+- ✅ Auto-deploy on push
+
+- 🔗 Live URL
+
+Backend runs on:
+
+- 🛠 Express + MongoDB Atlas
+
+- 🔒 JWT-based auth with cookie session
+
+Storage:
+- ☁️ AWS S3
+
+---
+
+## 🎯 Roadmap
+
+- ✅ Autosave only after delay
+
+- ✅ Role-based board sharing (view/edit)
+
+- ✅ Undo/Redo + Keyboard shortcuts
+
+- ✅ Zoom + Pan with redraw
+
+- ⬜ Realtime multiplayer with WebSocket
+
+- ⬜ Version history for boards
+
+- ⬜ Sticky notes, emojis, and shape fill
+ 
+---
+
+## 📄 License
+This project is open-sourced under the MIT License.
+
+---
+
+## 🧑‍💻 Built By
+
+Samyak Shah – Passionate about full-stack development, graphics systems, and real-time apps.
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" width='15px'/> [LinkedIn](https://www.linkedin.com/in/samyakkshah/)

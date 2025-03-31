@@ -10,23 +10,13 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import api from './api/api';
 import Loader from './components/Loader';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 function App() {
   const [boards, setBoards] = useState<Record<string, { name: string; data: string }>>({});
 
-  const getUniqueBoardName = (base: string = 'Untitled') => {
-    let name = base;
-    let count = 1;
-
-    const existingNames = Object.values(boards).map(b => b.name);
-    while (existingNames.includes(name)) {
-      name = `${base} (${count++})`;
-    }
-
-    return name;
-  };
-
   return (
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ''}>
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-50">
@@ -49,6 +39,7 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 
