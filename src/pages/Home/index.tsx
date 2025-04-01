@@ -12,16 +12,16 @@ import Login from '../Login';
 import Register from '../Register';
 import { Board } from '../../types/types';
 import ToolButton from '../../components/Toolbar/ToolButton';
+import { getBoardData } from '../../utils/utils';
 
 const Home: React.FC = () => {
   const [boards, setBoards] = useState<Record<string, { name: string; data: string; shared?: boolean }>>({});
-
   const [activeTab, setActiveTab] = useState<'recent' | 'shared' | 'all'>('recent');
   const [recentBoardIds, setRecentBoardIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDark, setIsDark] = useState<boolean>(document.documentElement.classList.contains('dark'));
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, setBoard } = useAuth();
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [signInView, setSignInView] = useState<'login' | 'register'>('login')
 
@@ -104,6 +104,8 @@ const Home: React.FC = () => {
     } catch (err) {
       console.warn('Could not update recent', err);
     }
+    const boardData = await getBoardData(id)
+    setBoard(boardData)
     navigate(`/board/${id}`);
   };
 

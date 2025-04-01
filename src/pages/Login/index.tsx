@@ -64,7 +64,7 @@ const Login: React.FC<LoginProps> = ({ changePage, onSuccess }) => {
         </div>
         <div className='w-full flex justify-end gap-2'>
           <GoogleLoginButton onSuccess={onSuccess} />
-         <button type="submit" className="bg-[#db5700] text-white rounded-xl w-20 py-1 hover:bg-[#c14d00] transition-all duration-150 ease-in hover:transition-[all 150ms ease-out]">{loading ? <Loader color='border-black' width={5} height={5} borderSize={2}/>:'Login'}</button>
+         <button type="submit" className="bg-[#db5700] text-white rounded-xl w-20 py-1 hover:bg-[#c14d00] transition-all duration-150 ease-in hover:transition-[all 150ms ease-out]">{!loading ? <Loader color='border-black' width={5} height={5} borderSize={2}/>:'Login'}</button>
         </div>
       </form>
     </div>

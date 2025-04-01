@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../../api/api';
+import { Board } from '../../types/types';
 
 interface User {
   _id: string;
@@ -14,6 +15,8 @@ interface AuthContextType {
   logout: (onLoggedOut?: () => void) => void;
   register: (name: string, email: string, password: string) => Promise<void>;
   googleLogin: (credentials: string) => Promise<void>;
+  board: Board | null;
+  setBoard: React.Dispatch<React.SetStateAction<Board | null>>,
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -21,11 +24,14 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [board, setBoard] = useState<Board | null>(null);
 
   const fetchUser = async () => {
-    setLoading(true);
+    
     try {
+      setLoading(true);
       const res = await api.get('/auth/me');
+      setLoading(false);
       setUser(res.data);
     } catch (err) {
       setUser(null);
@@ -39,8 +45,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
+    
     try {
+      setLoading(true);
       await api.post('/auth/login', { email, password });
       await fetchUser();
     } catch (err) {
@@ -51,8 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const googleLogin = async (credential: string) => {
-    setLoading(true);
     try {
+      setLoading(true);
       await api.post('/auth/google-login', { credential });
       await fetchUser();
     } catch (err) {
@@ -86,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, googleLogin }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, googleLogin, board, setBoard }}>
       {children}
     </AuthContext.Provider>
   );

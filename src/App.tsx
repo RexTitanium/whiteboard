@@ -65,7 +65,6 @@ const WhiteboardWrapper: React.FC = () => {
           ...prev,
           [id]: { name: boardData.name, data: boardData.data },
         }));
-
         if (boardData.userId === user?._id) {
           setPermission('edit');
         } else {
