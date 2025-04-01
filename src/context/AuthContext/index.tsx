@@ -13,86 +13,77 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: (onLoggedOut?: () => void) => void;
   register: (name: string, email: string, password: string) => Promise<void>;
-  googleLogin: (credentials: string) => void,
+  googleLogin: (credentials: string) => Promise<void>;
 }
-
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState<boolean>(false);
 
   const fetchUser = async () => {
+    setLoading(true);
     try {
-      setLoading(true)
       const res = await api.get('/auth/me');
       setUser(res.data);
-    } catch {
+    } catch (err) {
       setUser(null);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
-    useEffect(() => {
-      fetchUser();
-    }, []);
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
-    const login = async (email: string, password: string) => {
-      setLoading(true)
-      const res = await api.post('/auth/login', { email, password });
-      const token = res?.data?.token;
-
-      if (token) {
-        localStorage.setItem('token', token);
-        window.location.reload();
-      } else {
-        console.error('Login succeeded but token missing from response');
-      }
-      setLoading(false)
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      await api.post('/auth/login', { email, password });
       await fetchUser();
-      };
+    } catch (err) {
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const googleLogin = async (credential: string) => {
-      console.log("Google login response:", credential);
-      try {
-        const res = await api.post('/auth/google-login', {credential: credential});
-        const token = res?.data?.token
-        
-        if (token) {
-          localStorage.setItem('token', token);
-          window.location.reload();
-        } else {
-          console.error('Login succeeded but token missing from response');
-        }
-        setLoading(false)
-        await fetchUser();
+  const googleLogin = async (credential: string) => {
+    setLoading(true);
+    try {
+      await api.post('/auth/google-login', { credential });
+      await fetchUser();
+    } catch (err) {
+      console.error('Google login error:', err);
+      alert('Google login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      } catch (err) {
-        console.error('Google login error:', err);
-        alert('Google login failed');
-      }
-    };
-
-    const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string) => {
+    setLoading(true);
+    try {
       await api.post('/auth/register', { name, email, password });
       await login(email, password);
-    };
+    } catch (err) {
+      console.error('Registration error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const logout = async (callback?: () => void) => {
-      try {
-        await api.post('/auth/logout');
-        localStorage.removeItem('token')
-        setUser(null);
-        if (callback) callback();
-      } catch (err) {
-        console.error('Logout error', err);
-      }
-    };
-
-
-
+  const logout = async (callback?: () => void) => {
+    try {
+      await api.post('/auth/logout');
+      setUser(null);
+      if (callback) callback();
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, register, googleLogin }}>
@@ -102,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 };
 
 export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  return context;
 };

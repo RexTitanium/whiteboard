@@ -170,7 +170,7 @@ const Home: React.FC = () => {
             </div>
           ) : (
             <div className="flex gap-3">
-              <button onClick={() => setShowSignInModal(true)} className="bg-[#ddd] text-[#555] hover:bg-[#bbb] hover:text-[#222] dark:bg-[#222] transition-all duration-300 ease rounded-xl text-white px-5 dark:hover:bg-[#000] hover:transition-[all 300ms ease]">Create Account/Sign In</button>
+              <button onClick={() => setShowSignInModal(true)} className="bg-[#ddd] text-[#555] hover:bg-[#bbb] hover:text-[#222] dark:bg-[#222] transition-all duration-300 ease rounded-xl dark:text-white px-5 dark:hover:bg-[#000] hover:transition-[all 300ms ease]">Create Account/Sign In</button>
             </div>
           )}
 
