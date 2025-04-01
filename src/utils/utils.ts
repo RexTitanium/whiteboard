@@ -1,4 +1,5 @@
 import api from '../api/api';
+import { useBoard } from '../context/BoardContext';
 import { Board } from '../types/types';
 
 /**
@@ -28,6 +29,28 @@ export const getBoardData = async (id: string): Promise<Board | null> => {
     return null;
   }
 }
+
+export const createBoard = async (name: string) => {
+    try {
+      const res = await api.post('/boards/createBoard', {
+        name: name,
+      });
+      return res.data
+    } catch (err) {
+      console.error('Error creating board', err);
+      return err
+    }
+}
+
+export const deleteBoardById = async(id:string) => {
+  try {
+      const resp = await api.delete(`/boards/${id}`);
+      return resp.data
+    } catch (err) {
+      console.error('Delete failed', err);
+      return err
+    }
+};
 
 export const removeEmailFromShareList = async(id: string, email: string): Promise<string | null> => {
   try {

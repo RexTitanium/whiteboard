@@ -9,29 +9,21 @@ import Toast from '../Toast';
 import { useRedrawThrottle } from './useRedrawThrottle';
 import api from '../../api/api';
 import { renameFile } from '../../utils/utils';
+import { useBoard } from '../../context/BoardContext';
 
 interface WhiteboardProps {
   boardId: string;
-  board: { name: string; data: string };
-  boards: Record<string, { name: string; data: string }>;
   onExit: () => void;
-  updateBoards: React.Dispatch<React.SetStateAction<Record<string, { name: string; data: string }>>>;
-  getUniqueBoardName: (base?: string) => string;
-  permission?: 'view' | 'edit';
-  sharedWith: { userId: string; email: string; permission: 'view' | 'edit' }[];
 }
 
 
 const Whiteboard: React.FC<WhiteboardProps> = ({
   boardId,
-  board,
-  boards,
-  updateBoards,
   onExit,
-  getUniqueBoardName,
-  permission,
-  sharedWith,
 }) => {
+
+  const {board, permission, sharedWith, } = useBoard();
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const isReadOnly = permission === 'view';
@@ -47,7 +39,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
   const [textPosition, setTextPosition] = useState<{ x: number; y: number } | null>(null);
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
-  const [fileName, setFileName] = useState(board.name || 'Unnamed');
+  const [fileName, setFileName] = useState(board?.name || 'Unnamed');
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
@@ -447,9 +439,9 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
 
-    const boardData = board.data;
+    const boardData = board?.data;
     if (!boardData) {
-      triggerToast(`No saved data for "${board.name}"`);
+      triggerToast(`No saved data for "${board?.name}"`);
       return;
     }
 
@@ -487,7 +479,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     if(resp) triggerToast(resp);
   };
 
-  if (fileName !== board.name) {
+  if (fileName !== board?.name) {
     rename();
   }
 
