@@ -46,6 +46,7 @@ const Taskbar: React.FC<TaskbarProps> = ({
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareEmail, setShareEmail] = useState('')
   const [sharePermission, setSharePermission] = useState<'view' | 'edit'>('view')
+  const [fName, setFName] = useState<string>(fileName)
 
   const { user, board } = useAuth();
 
@@ -53,6 +54,21 @@ const Taskbar: React.FC<TaskbarProps> = ({
     if (board) {
       const resp = await removeEmailFromShareList(board._id, email)
       if(resp) setSharedUsers((prev) => prev.filter((u) => u.email !== email))
+    }
+  }
+
+  const handleFileRename = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur()
+      setFileName(fName)
+    }
+  } 
+
+  const handleShareToEmail = () => {
+    if (onShare && shareEmail && sharePermission) {
+    onShare(shareEmail, sharePermission);
+    setShareEmail('');
+    setSharePermission('view');
     }
   }
 
@@ -65,9 +81,9 @@ const Taskbar: React.FC<TaskbarProps> = ({
         <div className="flex items-center gap-2 z-[999] p-2 bg-white rounded-xl shadow-sm border border-gray-200 h-10 dark:bg-stone-900 dark:border-stone-800 dark:shadow-md">
           <input
             type="text"
-            value={fileName}
-            onChange={(e) => setFileName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+            value={fName}
+            onChange={(e) => setFName(e.target.value)}
+            onKeyDown={(e) => handleFileRename(e)}
             placeholder="Unnamed"
             disabled={isReadOnly}
             className={`px-2 py-1 text-sm text-[#999] border-gray-800 transition-all duration-300ms ease focus:outline-none focus:border-b-2 focus:text-black dark:bg-stone-900 dark:border-stone-800 dark:shadow-md ${
@@ -145,7 +161,7 @@ const Taskbar: React.FC<TaskbarProps> = ({
                     {<XCircle size={20} strokeWidth={1.5}/>}
                     </button>
                     <div className='flex flex-row justify-between items-center gap-2 w-full rounded-xl'>
-                        <span className="truncate px-2 py-1 bg-[#eee] w-full rounded-xl">{user.email}</span>
+                        <span className="truncate px-2 py-1 bg-[#ddd] text-[#555] w-full rounded-xl dark:bg-[#000]">{user.email}</span>
                             <select
                                 value={user.permission}
                                 onChange={(e) =>
@@ -161,13 +177,7 @@ const Taskbar: React.FC<TaskbarProps> = ({
                 ))}
                 <div className="flex items-center gap-2">
                     <button
-                    onClick={() => {
-                        if (onShare && shareEmail && sharePermission) {
-                        onShare(shareEmail, sharePermission);
-                        setShareEmail('');
-                        setSharePermission('view');
-                        }
-                    }}
+                    onClick={handleShareToEmail}
                     className="text-stone-500 transition-all duration-150ms ease font-bold text-lg hover:text-green-700 transition-[all 150ms ease] "
                     >
                     <PlusCircle size={20} strokeWidth={1.5}/>
@@ -177,7 +187,12 @@ const Taskbar: React.FC<TaskbarProps> = ({
                         placeholder="Enter email"
                         value={shareEmail}
                         onChange={(e) => setShareEmail(e.target.value)}
-                        className="truncate px-2 py-1 bg-[#eee] border-2 border-[#eee] w-full rounded-xl focus:outline-none focus:bg-white focus:transition[all 300ms ease] transition-[all 300ms ease]"
+                        onKeyDown={(e) => 
+                          { if(e.key === 'Enter') { 
+                              e.currentTarget.blur()
+                             handleShareToEmail()
+                          }}}
+                        className="truncate px-2 py-1 bg-[#eee] border-2 border-[#eee] w-full rounded-xl focus:outline-none focus:bg-white focus:transition[all 300ms ease] transition-[all 300ms ease] dark:bg-[#111] dark:border-[#141414] dark:text-[#eee]"
                     />
                     <select
                         value={sharePermission}

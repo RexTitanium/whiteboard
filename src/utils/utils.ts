@@ -30,11 +30,25 @@ export const getBoardData = async (id: string): Promise<Board | null> => {
 }
 
 export const removeEmailFromShareList = async(id: string, email: string): Promise<string | null> => {
-  console.log(id)
-  console.log(email)
+  try {
   const res = await api.delete(`/boards/${id}/share`, {
     data: { email: email },
   });
-
+  
   return res.data.message || null
+  }catch (err) {
+    console.error(`Error Renaming File: ${err}`);
+    return null
+  }
+
+}
+
+export const renameFile = async(id: string, newFileName: string): Promise<string> => {
+  try {
+      await api.put(`/boards/${id}`, { name: newFileName });
+      return `Renamed Board to ${newFileName}`
+    } catch (err) {
+      console.error('Failed to rename board:', err);
+      return `Failed to rename board`
+    }
 }

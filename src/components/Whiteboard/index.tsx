@@ -8,6 +8,7 @@ import Taskbar from '../Taskbar';
 import Toast from '../Toast';
 import { useRedrawThrottle } from './useRedrawThrottle';
 import api from '../../api/api';
+import { renameFile } from '../../utils/utils';
 
 interface WhiteboardProps {
   boardId: string;
@@ -454,7 +455,7 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
 
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = boardData;
+    img.src = `${boardData}?v=${Date.now()}`
 
     img.onload = () => {
       const dpr = window.devicePixelRatio || 1;
@@ -480,35 +481,41 @@ const Whiteboard: React.FC<WhiteboardProps> = ({
     scheduleSave(5000)
   }, []);
 
-   useEffect(() => {
-    scheduleSave(2000)
-  }, [fileName]);
+  useEffect(() => {
+  const rename = async () => {
+    const resp = await renameFile(boardId, fileName);
+    if(resp) triggerToast(resp);
+  };
+
+  if (fileName !== board.name) {
+    rename();
+  }
+
+}, [fileName]);
+
 
   useEffect(() => {
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      if (e.key.toLowerCase() === 'z') {
-        e.preventDefault();
-        if (e.shiftKey) {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          if (e.shiftKey) {
+            redo(scale, offset); 
+          } else {
+            undo(scale, offset);
+          }
+        } else if (e.key.toLowerCase() === 'y') {
+          e.preventDefault();
           redo(scale, offset); 
-        } else {
-          undo(scale, offset);
-        }
-      } else if (e.key.toLowerCase() === 'y') {
-        e.preventDefault();
-        redo(scale, offset); 
-      } else if (e.key.toLowerCase() === 's'){
-        e.preventDefault();
-        saveBoard();
-      } else if (e.key.toLowerCase() === 'u'){
-        e.preventDefault();
-        saveBoard();
-      } else if (e.key.toLowerCase() === '0'){
-          setScale(1);
-          setOffset({ x: 0, y: 0 });
+        } else if (e.key.toLowerCase() === 's'){
+          e.preventDefault();
+          saveBoard();
+        } else if (e.key.toLowerCase() === '0'){
+            setScale(1);
+            setOffset({ x: 0, y: 0 });
 
-      }
-      return;
+        }
+        return;
     }
 
     switch (e.key.toLowerCase()) {

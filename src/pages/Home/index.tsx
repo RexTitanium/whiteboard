@@ -204,7 +204,7 @@ const Home: React.FC = () => {
       
       {/* Login Modal */}
       {showSignInModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" >
           <div className="flex flex-row gap-10 h-[50vh] w-[50vw] justify-center items-center bg-white rounded-2xl shadow-lg dark:bg-black">
             <div className='relative w-full h-full flex justify-center items-center'>
               <ToolButton icon={<XIcon size={16} strokeWidth={1.5} />} onClick={() => setShowSignInModal(false)} title={'Close'} 
