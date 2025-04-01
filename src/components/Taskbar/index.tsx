@@ -11,32 +11,11 @@ const Taskbar: React.FC<TaskbarProps> = ({
   fileName,
   setFileName,
   downloadBoard,
-  color,
-  setColor,
-  brushSize,
-  setBrushSize,
-  eraserSize,
-  setEraserSize,
-  shape,
-  setShape,
-  tool,
-  setTool,
-  clearCanvas,
+  saveBoard,
+  onShare,
   undo,
   redo,
-  saveBoard,
-  loadBoard,
-  gridCols,
-  setGridCols,
-  fontSize,
-  setFontSize,
-  isBold,
-  setIsBold,
-  isItalic,
-  setIsItalic,
-  scale,
-  offset,
-  onShare,
+  clearCanvas,
   permission,
   sharedUsers,
   setSharedUsers,
@@ -96,32 +75,11 @@ const Taskbar: React.FC<TaskbarProps> = ({
       </div>
 
       {!isReadOnly && (
-        <Toolbar
-          color={color}
-          setColor={setColor}
-          brushSize={brushSize}
-          setBrushSize={setBrushSize}
-          eraserSize={eraserSize}
-          setEraserSize={setEraserSize}
-          shape={shape}
-          setShape={setShape}
-          tool={tool}
-          setTool={setTool}
+        <Toolbar 
+          saveBoard={saveBoard}
           undo={undo}
           redo={redo}
           clearCanvas={clearCanvas}
-          saveBoard={saveBoard}
-          loadBoard={loadBoard}
-          gridCols={gridCols}
-          setGridCols={setGridCols}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-          isBold={isBold}
-          setIsBold={setIsBold}
-          isItalic={isItalic}
-          setIsItalic={setIsItalic}
-          scale={scale}
-          offset={offset}
         />
       )}
 

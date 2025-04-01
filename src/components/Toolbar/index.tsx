@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Pencil,
   Eraser,
@@ -21,41 +21,28 @@ import { Tool, Shapes, ToolbarProps } from '../../types/types';
 import ToolButton from './ToolButton';
 import ToolDropdown from './ToolDropDown';
 import Toast from '../Toast';
+import { useWhiteboard } from '../../context/WhiteBoardContext';
+import { useCanvas } from '../Whiteboard/useCanvas';
 
-const Toolbar: React.FC<ToolbarProps> = ({
-  color,
-  setColor,
-  brushSize,
-  setBrushSize,
-  eraserSize,
-  setEraserSize,
-  shape,
-  setShape,
-  tool,
-  setTool,
-  undo,
-  redo,
-  clearCanvas,
-  saveBoard,
-  loadBoard,
-  gridCols,
-  setGridCols,
-  fontSize,
-  setFontSize,
-  isBold,
-  setIsBold,
-  isItalic,
-  setIsItalic,
-  scale,
-  offset,
-}) => {
+const Toolbar: React.FC<ToolbarProps> = ({saveBoard, undo, redo, clearCanvas}) => {
   const [activeDropdown, setActiveDropdown] = useState<Tool | ''>('');
   const [showShapeDropdown, setShowShapeDropdown] = useState(false);
   const [showGridDropdown, setShowGridDropdown] = useState(false);
   const [showToast, setShowToast] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>('');
   const [isDark, setIsDark] = useState<boolean>(document.documentElement.classList.contains('dark'));
-
+  const {
+    color, setColor,
+    tool, setTool,
+    brushSize, setBrushSize,
+    eraserSize, setEraserSize,
+    shape, setShape,
+    fontSize, setFontSize,
+    isItalic, setIsItalic,
+    isBold, setIsBold,
+    gridCols, setGridCols,
+    scale, offset,
+  } = useWhiteboard()
 
   const toggleTheme = () => {
     document.documentElement.classList.toggle('dark');

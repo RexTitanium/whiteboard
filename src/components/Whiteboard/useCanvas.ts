@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useWhiteboard } from '../../context/WhiteBoardContext';
 
 export const useCanvas = (
   canvasRef: React.RefObject<HTMLCanvasElement | null>,
@@ -6,9 +7,9 @@ export const useCanvas = (
 ) => {
   const [undoStack, setUndoStack] = useState<string[]>([]);
   const [redoStack, setRedoStack] = useState<string[]>([]);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [baseImage, setBaseImage] = useState<HTMLImageElement | null>(null);
+
+  const { isDrawing, setIsDrawing, startPos, setStartPos} = useWhiteboard()
 
   const saveSnapshot = useCallback((scale: number, offset: { x: number; y: number }) => {
     const canvas = canvasRef.current;
@@ -99,11 +100,22 @@ export const useCanvas = (
     const context = canvas?.getContext('2d');
     if (!canvas || !context) return;
 
+    // Actually clear the canvas
     context.clearRect(0, 0, canvas.width, canvas.height);
-    setBaseImage(null);
-
-    saveSnapshot(scale, offset);
-  }, [canvasRef, saveSnapshot]);
+    
+    const snapshot = undoStack[undoStack.length - 1]
+    // Push a blank state
+    const blank = canvas.toDataURL();
+    if (snapshot && blank.length === snapshot.length) return;
+    const img = new Image();
+    img.src = blank;
+    img.onload = () => {
+      setBaseImage(img);
+      // Final snapshot state (blank)
+      setUndoStack((prev) => [...prev, blank]);
+      setRedoStack([])
+    };
+  }, [canvasRef]);
 
 
   return {

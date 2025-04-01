@@ -10,6 +10,7 @@ import api from './api/api';
 import Loader from './components/Loader';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BoardProvider, useBoard } from './context/BoardContext';
+import { WhiteboardProvider } from './context/WhiteBoardContext';
 
 function App() {
   return (
@@ -57,10 +58,9 @@ const WhiteboardWrapper: React.FC = () => {
   if (!id || !board) return <div className="p-6 text-center"><Loader /></div>;
 
   return (
-    <Whiteboard
-      boardId={id}
-      onExit={() => navigate('/')}
-    />
+    <WhiteboardProvider>
+      <Whiteboard boardId={id} onExit={() => navigate('/')}/>
+    </WhiteboardProvider>
   );
 };
 

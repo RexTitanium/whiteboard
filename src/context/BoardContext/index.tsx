@@ -3,6 +3,7 @@ import { Board } from '../../types/types';
 import api from '../../api/api';
 import { createBoard, deleteBoardById } from '../../utils/utils';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 
 interface BoardContextType {
     board: Board | null;
@@ -24,7 +25,7 @@ interface BoardContextType {
 const BoardContext = createContext<BoardContextType | null>(null);
 
 export const BoardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [board, setBoard] = useState<Board | null>(null);
+    const {board, setBoard} = useAuth()
     const [allBoards, setAllBoards] = useState<Record<string, Board>>({});
     const [permission, setPermission] = useState<'view' | 'edit'>('edit');
     const [sharedWith, setSharedWith] = useState<BoardContextType['sharedWith']>([]);
